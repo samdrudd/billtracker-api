@@ -1,0 +1,22 @@
+{
+  "name": "billtracker-api",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "author": "Sam Rudd",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "billtracker-api": "file:",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.13.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
