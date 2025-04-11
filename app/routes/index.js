@@ -1,5 +1,5 @@
-const modelRoutes = require('./model_routes');
+const transactionRoutes = require('./transaction_routes');
 
 module.exports = function(app, db) {
-	modelRoutes(app, db);
+	transactionRoutes(app, db);
 }
