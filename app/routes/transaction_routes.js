@@ -1,10 +1,23 @@
 const TransactionModel = require('../models/Transaction');
+const jwt = require('jsonwebtoken');
 
 module.exports = function(app, db) {
 	const Transaction = db.model('Transaction', TransactionModel.transactionSchema, 'transactions');
 
+    const authenticateToken = (req, res, next) => {
+        const token = req.headers['authorization'].split(' ')[1]; 
+        if (!token) return res.sendStatus(401); // Unauthorized
+
+        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            if (err) return res.sendStatus(403); // Forbidden
+            req.user = user;
+            console.log("in jwt.verify, req.user: " + JSON.stringify(req.user));
+            next();
+        });
+    }
+
     // Create a Transaction
-	app.post('/transactions', (req, res) => {
+	app.post('/transactions', authenticateToken, (req, res) => {
 		var transaction = new Transaction(req.body); 
 		transaction.save().then((savedDoc) => {
 			res.status(201).json(savedDoc);
@@ -17,7 +30,7 @@ module.exports = function(app, db) {
 
 
     // Find a Transaction by ID
-	app.get('/Transaction/:id', (req, res) => {
+	app.get('/Transaction/:id', authenticateToken, (req, res) => {
 		Transaction.findById(req.params.id).then((foundDoc) => {
             if (foundDoc)
 			    res.status(200).send(foundDoc);
@@ -31,8 +44,8 @@ module.exports = function(app, db) {
 	});
 
     // Find all Transactions
-	app.get('/transactions', (req, res) => {
-		Transaction.find({}).then((results) => {
+	app.get('/transactions', authenticateToken, (req, res) => {
+		Transaction.find({userId: req.user.id}).then((results) => {
 			res.send(results);
 		})
         .catch(error => {
@@ -43,7 +56,7 @@ module.exports = function(app, db) {
 	});
 
     // Update a Transaction
-	app.put('/transactions/:id', (req, res) => {
+	app.put('/transactions/:id', authenticateToken, (req, res) => {
         Transaction.findByIdAndUpdate(req.params.id, req.body, {new: true}).then((savedDoc) => {
             if (savedDoc)
 			    res.send(savedDoc);
@@ -57,7 +70,7 @@ module.exports = function(app, db) {
 	});
 
     // Delete a Transaction
-	app.delete('/transactions/:id', (req, res) => {
+	app.delete('/transactions/:id', authenticateToken, (req, res) => {
 		Transaction.findByIdAndDelete(req.params.id).then((deletedDoc) => {
             if (deletedDoc)
 			    res.send(deletedDoc);
