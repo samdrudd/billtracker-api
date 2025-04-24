@@ -1,24 +1,15 @@
 const TransactionModel = require('../models/Transaction');
 const jwt = require('jsonwebtoken');
+const { authenticateToken } = require('../middleware/middleware');
 
 module.exports = function(app, db) {
 	const Transaction = db.model('Transaction', TransactionModel.transactionSchema, 'transactions');
 
-    const authenticateToken = (req, res, next) => {
-        const token = req.headers['authorization'].split(' ')[1]; 
-        if (!token) return res.sendStatus(401); // Unauthorized
-
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403); // Forbidden
-            req.user = user;
-            console.log("in jwt.verify, req.user: " + JSON.stringify(req.user));
-            next();
-        });
-    }
-
     // Create a Transaction
 	app.post('/transactions', authenticateToken, (req, res) => {
 		var transaction = new Transaction(req.body); 
+        transaction.userId = req.user.id;
+        
 		transaction.save().then((savedDoc) => {
 			res.status(201).json(savedDoc);
 		})

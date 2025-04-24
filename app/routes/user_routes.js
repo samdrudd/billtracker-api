@@ -1,5 +1,6 @@
 const UserModel = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { authenticateToken } = require('../middleware/middleware');
 const errorCodes = {
     USER_ALREADY_EXISTS: 1,
     PASSWORD_TOO_SHORT: 2,
@@ -11,18 +12,6 @@ const errorCodes = {
 module.exports = function(app, db) {
 	const User = db.model('User', UserModel.userSchema, 'users');
     const JWT_SECRET = process.env.JWT_SECRET;
-
-    const authenticateToken = (req, res, next) => {
-        const token = req.body.token;
-        if (!token) return res.sendStatus(401); // Unauthorized
-
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403); // Forbidden
-            req.user = user;
-            console.log(req.user);
-            next();
-        });
-    }
 
     const generateToken = (userId) => {
         return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '24h' });
@@ -90,8 +79,8 @@ module.exports = function(app, db) {
     app.post('/users/tokenAuth', authenticateToken, async (req, res) => {
         // If we got back here from authenticateToken, the token is valid
         const user = await User.findById(req.user.id);
-        const token = req.body.token;
+        user.token = req.user.token;
 
-        res.status(200).json({ user: { id: user._id, username: user.username, email: user.email, token: token } });
+        res.status(200).json({ user: { id: user._id, username: user.username, email: user.email, token: user.token } });
 	});
 };
